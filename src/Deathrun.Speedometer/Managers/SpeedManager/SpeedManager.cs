@@ -10,7 +10,6 @@ using Sharp.Shared.Objects;
 namespace Deathrun.Speedometer.Managers.SpeedManager;
 
 internal class SpeedManager(
-    ILogger<SpeedManager> logger,
     IModSharp modSharp,
     IHookManager hookManager) : ISpeedManager, IGameListener
 {
