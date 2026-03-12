@@ -15,23 +15,17 @@ namespace Deathrun.Speedometer;
 
 public class Speedometer : IModSharpModule
 {
-    public string DisplayName         => $"[Deathrun] Speedometer - Last Build Time: {Bridge.FileTime}";
+    public string DisplayName         => $"[Deathrun] Speedometer - Last Build Time: {_bridge.FileTime}";
     public string DisplayAuthor       => "AquaVadis";
     
     private readonly ServiceProvider  _serviceProvider;
-    private static ISharedSystem      _sharedSystem = null!;
-    public static ISharedSystem SharedSystem => _sharedSystem;
-    
-    public static IModSharpModuleInterface<IDeathrunManager>?  DeathrunManagerApi;
     
 #pragma warning disable CA2211
-
-    public static string ModulePath                 = "";
-    public static ILogger<Speedometer> Logger   = null!;
-    public static InterfaceBridge Bridge            = null!;
-    public static Speedometer Instance          = null!;
-    
+    public static IModSharpModuleInterface<IDeathrunManager>?  DeathrunManagerApi;
 #pragma warning restore CA2211
+    
+    private static InterfaceBridge _bridge            = null!;
+    private static ILogger<Speedometer> _logger       = null!;
     
     public Speedometer(ISharedSystem sharedSystem,
         string                   dllPath,
@@ -40,11 +34,8 @@ public class Speedometer : IModSharpModule
         IConfiguration           coreConfiguration,
         bool                     hotReload)
     {
-        ModulePath = dllPath;
-        Bridge = new InterfaceBridge(dllPath, sharpPath, version, sharedSystem);
-        Instance = this;
-        Logger = sharedSystem.GetLoggerFactory().CreateLogger<Speedometer>();
-        _sharedSystem = sharedSystem;
+        _bridge = new InterfaceBridge(dllPath, sharpPath, version, sharedSystem);
+        _logger = sharedSystem.GetLoggerFactory().CreateLogger<Speedometer>();
         
         var configuration = new ConfigurationBuilder()
                                 .AddJsonFile(Path.Combine(dllPath, "base.json"), true, false)
@@ -52,10 +43,10 @@ public class Speedometer : IModSharpModule
         
         var services = new ServiceCollection();
 
-        services.AddSingleton(Bridge);
-        services.AddSingleton(Bridge.ClientManager);
+        services.AddSingleton(_bridge);
+        services.AddSingleton(_bridge.ModSharp);
+        services.AddSingleton(_bridge.HookManager);
         services.AddSingleton(sharedSystem);
-        services.AddSingleton(sharedSystem.GetConVarManager());
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton(sharedSystem.GetLoggerFactory());
         services.TryAdd(ServiceDescriptor.Singleton(typeof(ILogger<>), typeof(Logger<>)));
@@ -68,7 +59,7 @@ public class Speedometer : IModSharpModule
     
     public bool Init()
     {
-        Logger.LogInformation("[Deathrun.Speedometer] {colorMessage}", "Load Deathrun Speedometer!");
+        _logger.LogInformation("[Deathrun.Speedometer] {colorMessage}", "Load Deathrun Speedometer!");
         
         //load managers
         CallInit<IManager>();
@@ -83,21 +74,17 @@ public class Speedometer : IModSharpModule
 
         _serviceProvider.ShutdownAllSharpExtensions();
         
-        Logger.LogInformation("[Deathrun.Speedometer] {colorMessage}", "Unloaded Deathrun Speedometer!");
+        _logger.LogInformation("[Deathrun.Speedometer] {colorMessage}", "Unloaded Deathrun Speedometer!");
     }
 
     public void OnAllModulesLoaded()
     {
         DeathrunManagerApi 
-            = Bridge.SharpModuleManager.GetOptionalSharpModuleInterface<IDeathrunManager>(IDeathrunManager.Identity);
+            = _bridge.SharpModuleManager.GetOptionalSharpModuleInterface<IDeathrunManager>(IDeathrunManager.Identity);
         
-        if (DeathrunManagerApi?.Instance is { } deathrunManagerApi)
+        if (DeathrunManagerApi?.Instance is not { } deathrunManagerApi)
         {
-            //Logger.LogInformation("[Deathrun.Speedometer] {colorMessage}", "Captured Deathrun Manager Api!");
-        }
-        else
-        {
-            Logger.LogError("Failed to capture Deathrun Manager Api!");
+            _logger.LogError("Failed to capture Deathrun Manager Api!");
             return;
         }
 
@@ -120,7 +107,7 @@ public class Speedometer : IModSharpModule
         {
             if (!service.Init())
             {
-                Logger.LogError("Failed to Init {service}!", service.GetType().FullName);
+                _logger.LogError("Failed to Init {service}!", service.GetType().FullName);
 
                 return -1;
             }
@@ -141,7 +128,7 @@ public class Speedometer : IModSharpModule
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "An error occurred while calling PostInit in {m}", service.GetType().Name);
+                _logger.LogError(e, "An error occurred while calling PostInit in {m}", service.GetType().Name);
             }
         }
     }
@@ -156,7 +143,7 @@ public class Speedometer : IModSharpModule
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "An error occurred while calling Shutdown in {m}", service.GetType().Name);
+                _logger.LogError(e, "An error occurred while calling Shutdown in {m}", service.GetType().Name);
             }
         }
     }
@@ -171,7 +158,7 @@ public class Speedometer : IModSharpModule
             }
             catch (Exception e)
             {
-                Logger.LogError(e, "An error occurred while calling OnAllSharpModulesLoaded in {m}", service.GetType().Name);
+                _logger.LogError(e, "An error occurred while calling OnAllSharpModulesLoaded in {m}", service.GetType().Name);
             }
         }
     }
