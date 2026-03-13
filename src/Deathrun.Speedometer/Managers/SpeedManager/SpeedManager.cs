@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using Deathrun.Speedometer.Interfaces.Managers.SpeedManager;
-using Microsoft.Extensions.Logging;
 using Sharp.Shared;
 using Sharp.Shared.HookParams;
 using Sharp.Shared.Listeners;
