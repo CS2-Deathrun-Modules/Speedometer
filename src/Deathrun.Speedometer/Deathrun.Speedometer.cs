@@ -46,9 +46,10 @@ public class Speedometer : IModSharpModule
         services.AddSingleton(_bridge);
         services.AddSingleton(_bridge.ModSharp);
         services.AddSingleton(_bridge.HookManager);
+        services.AddSingleton(_bridge.EntityManager);
+        services.AddSingleton(_bridge.LoggerFactory);
         services.AddSingleton(sharedSystem);
         services.AddSingleton<IConfiguration>(configuration);
-        services.AddSingleton(sharedSystem.GetLoggerFactory());
         services.TryAdd(ServiceDescriptor.Singleton(typeof(ILogger<>), typeof(Logger<>)));
         
         services.AddManagers();

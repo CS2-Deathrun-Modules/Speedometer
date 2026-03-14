@@ -1,6 +1,10 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using Deathrun.Speedometer.Interfaces.Managers.SpeedManager;
+using DeathrunManager.Shared.Objects;
 using Sharp.Shared;
+using Sharp.Shared.GameEntities;
 using Sharp.Shared.HookParams;
 using Sharp.Shared.Listeners;
 using Sharp.Shared.Managers;
@@ -9,8 +13,7 @@ using Sharp.Shared.Objects;
 namespace Deathrun.Speedometer.Managers.SpeedManager;
 
 internal class SpeedManager(
-    IModSharp modSharp,
-    IHookManager hookManager) : ISpeedManager, IGameListener
+    IModSharp modSharp) : ISpeedManager, IGameListener
 {
     private static IGlobalVars? _globalVars = null;
     
@@ -18,8 +21,7 @@ internal class SpeedManager(
     
     public bool Init()
     {
-        hookManager.PlayerPostThink.InstallForward(PlayerPostThink);
-        
+        modSharp.InstallGameFrameHook(null, OnGameFramePost);
         modSharp.InstallGameListener(this);
         
         return true;
@@ -29,8 +31,7 @@ internal class SpeedManager(
 
     public void Shutdown()
     {
-        hookManager.PlayerPostThink.RemoveForward(PlayerPostThink);
-        
+        modSharp.RemoveGameFrameHook(null, OnGameFramePost);
         modSharp.RemoveGameListener(this);
     }
 
@@ -38,24 +39,37 @@ internal class SpeedManager(
 
     #region Hooks
 
-    private static void PlayerPostThink(IPlayerPawnFunctionParams parms)
+    private readonly List<IDeathrunPlayer> _deathrunPlayersBuffer = new(64);
+
+    private void OnGameFramePost(bool simulating, bool bFirstTick, bool bLastTick)
     {
         if (Speedometer.DeathrunManagerApi?.Instance is not { } deathrunManagerApi) return;
-        
-        if (_globalVars?.TickCount % 3 is not 0) return;
-        
-        var deathrunPlayer = deathrunManagerApi.Managers.PlayersManager.GetDeathrunPlayer(parms.Client);
-        if (deathrunPlayer is null) return;
 
-        var speedNum = deathrunPlayer.PlayerPawn?.GetAbsVelocity().Length() ?? 0;
+        deathrunManagerApi.Managers.PlayersManager.GetAllValidDeathrunPlayersZAlloc(_deathrunPlayersBuffer);
+
+        foreach (var deathrunPlayer in _deathrunPlayersBuffer)
+        {
+            float speedNum = 0;
+            if (deathrunPlayer.PlayerPawn?.IsAlive is true)
+            {
+                speedNum = deathrunPlayer.PlayerPawn?.GetAbsVelocity().Length() ?? 999;
+            }
+            else
+            {
+                var observedDeathrunPlayer = deathrunPlayer.ObservedDeathrunPlayer;
+                if (observedDeathrunPlayer is null) continue;
+                
+                speedNum = observedDeathrunPlayer.PlayerPawn?.GetAbsVelocity().Length() ?? 777;
+            }
             
-        deathrunPlayer.SetCenterMenuMiddleRowHtml
-        (
-            $"<font class='fontSize-m stratum-font fontWeight-Bold' color='#A7A7A7'>Speed: </font>"
-            + $"<font class='fontSize-m stratum-font fontWeight-Bold' color='magenta'>{speedNum.ToString("F", CultureInfo.InvariantCulture)}</font>"    
-        );
+            deathrunPlayer.SetCenterMenuMiddleRowHtml
+            (
+                $"<font class='fontSize-m stratum-font fontWeight-Bold' color='#A7A7A7'>Speed: </font>"
+                + $"<font class='fontSize-m stratum-font fontWeight-Bold' color='magenta'>{speedNum.ToString("F", CultureInfo.InvariantCulture)}</font>"    
+            );
+        }
     }
-
+    
     #endregion
     
     #region Listeners
