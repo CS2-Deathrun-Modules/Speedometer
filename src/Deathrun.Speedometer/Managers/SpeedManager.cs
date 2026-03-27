@@ -25,18 +25,14 @@ internal class SpeedManager(
 
     public void OnAllSharpModulesLoaded()
     {
-        if (Speedometer.DeathrunManagerApi?.Instance is not { } deathrunManagerApi) return;
-
-        deathrunManagerApi.Managers.PlayersManager.DeathrunPlayerThinkPost += OnDeathrunPlayerThinkPost;
+        Speedometer.DeathrunManagerApi.Managers.PlayersManager.DeathrunPlayerThinkPost += OnDeathrunPlayerThinkPost;
     }
     
     public void Shutdown()
     {
         modSharp.RemoveGameListener(this);
         
-        if (Speedometer.DeathrunManagerApi?.Instance is not { } deathrunManagerApi) return;
-
-        deathrunManagerApi.Managers.PlayersManager.DeathrunPlayerThinkPost -= OnDeathrunPlayerThinkPost;
+        Speedometer.DeathrunManagerApi.Managers.PlayersManager.DeathrunPlayerThinkPost -= OnDeathrunPlayerThinkPost;
     }
 
     #endregion

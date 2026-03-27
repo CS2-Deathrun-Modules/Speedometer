@@ -21,7 +21,7 @@ public class Speedometer : IModSharpModule
     private readonly ServiceProvider  _serviceProvider;
     
 #pragma warning disable CA2211
-    public static IModSharpModuleInterface<IDeathrunManager>?  DeathrunManagerApi;
+    public static IDeathrunManager DeathrunManagerApi      = null!;
 #pragma warning restore CA2211
     
     private static InterfaceBridge _bridge            = null!;
@@ -81,13 +81,10 @@ public class Speedometer : IModSharpModule
     public void OnAllModulesLoaded()
     {
         DeathrunManagerApi 
-            = _bridge.SharpModuleManager.GetOptionalSharpModuleInterface<IDeathrunManager>(IDeathrunManager.Identity);
-        
-        if (DeathrunManagerApi?.Instance is not { } deathrunManagerApi)
-        {
-            _logger.LogError("Failed to capture Deathrun Manager Api!");
-            return;
-        }
+            = _bridge
+                .SharpModuleManager
+                .GetOptionalSharpModuleInterface<IDeathrunManager>(IDeathrunManager.Identity)?
+                .Instance ?? throw new Exception("Failed to capture Deathrun Manager Api!");
 
         CallOnAllSharpModulesLoaded<IManager>();
     }
