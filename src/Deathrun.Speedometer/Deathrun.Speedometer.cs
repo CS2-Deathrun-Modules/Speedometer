@@ -15,7 +15,7 @@ namespace Deathrun.Speedometer;
 
 public class Speedometer : IModSharpModule
 {
-    public string DisplayName         => $"[Deathrun][Module] Speedometer - Last Build Time: {_bridge.FileTime}";
+    public string DisplayName         => $"[Deathrun][Module] Speedometer - Build #{_bridge.BuildNumber} - Last Build Time: {_bridge.FileTime}";
     public string DisplayAuthor       => "AquaVadis";
     
     private readonly ServiceProvider  _serviceProvider;
