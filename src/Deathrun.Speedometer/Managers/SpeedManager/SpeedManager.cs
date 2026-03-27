@@ -21,7 +21,6 @@ internal class SpeedManager(
     
     public bool Init()
     {
-        modSharp.InstallGameFrameHook(null, OnGameFramePost);
         modSharp.InstallGameListener(this);
         
         return true;
@@ -29,45 +28,46 @@ internal class SpeedManager(
 
     public static void OnPostInit() { }
 
+    public void OnAllSharpModulesLoaded()
+    {
+        if (Speedometer.DeathrunManagerApi?.Instance is not { } deathrunManagerApi) return;
+
+        deathrunManagerApi.Managers.PlayersManager.DeathrunPlayerThinkPost += OnDeathrunPlayerThinkPost;
+    }
+    
     public void Shutdown()
     {
-        modSharp.RemoveGameFrameHook(null, OnGameFramePost);
         modSharp.RemoveGameListener(this);
+        
+        if (Speedometer.DeathrunManagerApi?.Instance is not { } deathrunManagerApi) return;
+
+        deathrunManagerApi.Managers.PlayersManager.DeathrunPlayerThinkPost -= OnDeathrunPlayerThinkPost;
     }
 
     #endregion
 
-    #region Hooks
+    #region API Listeners
 
-    private readonly List<IDeathrunPlayer> _deathrunPlayersBuffer = new(64);
-
-    private void OnGameFramePost(bool simulating, bool bFirstTick, bool bLastTick)
+    private static void OnDeathrunPlayerThinkPost(IDeathrunPlayer deathrunPlayer)
     {
-        if (Speedometer.DeathrunManagerApi?.Instance is not { } deathrunManagerApi) return;
-
-        deathrunManagerApi.Managers.PlayersManager.GetAllValidDeathrunPlayersZAlloc(_deathrunPlayersBuffer);
-
-        foreach (var deathrunPlayer in _deathrunPlayersBuffer)
+        float speedNum = 0;
+        if (deathrunPlayer.PlayerPawn?.IsAlive is true)
         {
-            float speedNum = 0;
-            if (deathrunPlayer.PlayerPawn?.IsAlive is true)
-            {
-                speedNum = deathrunPlayer.PlayerPawn?.GetAbsVelocity().Length() ?? 999;
-            }
-            else
-            {
-                var observedDeathrunPlayer = deathrunPlayer.ObservedDeathrunPlayer;
-                if (observedDeathrunPlayer is null) continue;
-                
-                speedNum = observedDeathrunPlayer.PlayerPawn?.GetAbsVelocity().Length() ?? 777;
-            }
-            
-            deathrunPlayer.SetCenterMenuMiddleRowHtml
-            (
-                $"<font class='fontSize-m stratum-font fontWeight-Bold' color='#A7A7A7'>Speed: </font>"
-                + $"<font class='fontSize-m stratum-font fontWeight-Bold' color='magenta'>{speedNum.ToString("F", CultureInfo.InvariantCulture)}</font>"    
-            );
+            speedNum = deathrunPlayer.PlayerPawn?.GetAbsVelocity().Length() ?? 999;
         }
+        else
+        {
+            var observedDeathrunPlayer = deathrunPlayer.ObservedDeathrunPlayer;
+            if (observedDeathrunPlayer is null) return;
+                
+            speedNum = observedDeathrunPlayer.PlayerPawn?.GetAbsVelocity().Length() ?? 777;
+        }
+            
+        deathrunPlayer.SetCenterMenuMiddleRowHtml
+        (
+            $"<font class='fontSize-m stratum-font fontWeight-Bold' color='#A7A7A7'>Speed: </font>"
+            + $"<font class='fontSize-m stratum-font fontWeight-Bold' color='magenta'>{speedNum.ToString("F", CultureInfo.InvariantCulture)}</font>"    
+        );
     }
     
     #endregion
