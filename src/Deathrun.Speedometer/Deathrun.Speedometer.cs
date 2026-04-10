@@ -13,12 +13,13 @@ public class Speedometer : IDeathrunModule
     public string Name         => $"Speedometer Extension";
     public string Author       => "AquaVadis";
     
-    public IDeathrunManager DeathrunManagerApi { get; } = null!;
+    public IDeathrunManager DeathrunManagerApi { get; }
     private static ILogger<Speedometer> _logger       = null!;
     
     public Speedometer(ISharedSystem sharedSystem, IDeathrunManager deathrunManagerApi)
     {
         _logger = sharedSystem.GetLoggerFactory().CreateLogger<Speedometer>();
+        DeathrunManagerApi = deathrunManagerApi;
     }
 
     #region IModule
