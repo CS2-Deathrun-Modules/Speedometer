@@ -4,7 +4,7 @@ using DeathrunManager.Shared.Objects;
 using Microsoft.Extensions.Logging;
 using Sharp.Shared;
 
-namespace Deathrun.Speedometer;
+namespace Speedometer;
 
 public class Speedometer(ISharedSystem sharedSystem, IDeathrunManager deathrunManagerApi) : IDeathrunModule
 {
