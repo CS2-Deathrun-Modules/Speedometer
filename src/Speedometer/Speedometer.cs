@@ -1,6 +1,6 @@
 using System.Globalization;
 using DeathrunManager.Shared;
-using DeathrunManager.Shared.Objects;
+using DeathrunManager.Shared.DeathrunObjects;
 using Microsoft.Extensions.Logging;
 using Sharp.Modules.AdminManager.Shared;
 using Sharp.Shared;

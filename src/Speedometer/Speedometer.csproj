@@ -28,7 +28,7 @@
     </ItemGroup>
     
     <ItemGroup>
-      <PackageReference Include="DeathrunManager.Shared" Version="*" />
+      <PackageReference Include="DeathrunManager.Shared" Version="2.4.0" />
       <PackageReference Include="Sharp.Modules.AdminManager.Shared" Version="2.1.117" />
     </ItemGroup>
     
