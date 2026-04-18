@@ -1,1 +1,1 @@
-## Speedometer extension for [Deathrun Manager](https://github.com/aquevadis/ms-cs2deathrun-public)
+## Speedometer extension for [Deathrun Manager](https://github.com/DeathrunCS2/DeathrunManager)
